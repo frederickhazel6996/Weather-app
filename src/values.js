@@ -24,3 +24,13 @@ export const cityChecker = city => {
         return true;
     }
 };
+export const cityAlreadyAdded = (city, cities) => {
+    let found = cities.filter(
+        allCity => allCity.toUpperCase() === city.toUpperCase()
+    );
+    if (found.length === 0) {
+        return false;
+    } else {
+        return true;
+    }
+};

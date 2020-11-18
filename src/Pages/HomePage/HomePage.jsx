@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import WeatherCard from '../../Components/Cards/WeatherCard';
-import { cityChecker } from '../../values';
+import { cityChecker, cityAlreadyAdded } from '../../values';
+import { useForm } from 'react-hook-form';
 import { Notyf } from 'notyf';
 let spawn = require('spawn-password');
 import 'notyf/notyf.min.css';
@@ -15,23 +16,25 @@ let notyf = new Notyf({
 });
 function HomePage() {
     const [cities, setcities] = useState(['Accra', 'Dallas']);
-    const [city, setcity] = useState('');
 
+    const { register, handleSubmit } = useForm();
     let weatherCards = cities.map(city => (
         <Col lg={6} xl={4} key={spawn.spawnAlphaNumeric(20)}>
             <WeatherCard cityName={city} />
         </Col>
     ));
 
-    let handleSubmit = event => {
-        event.preventDefault();
-        let cityExists = cityChecker(city);
+    let submitHandler = data => {
+        let cityExists = cityChecker(data.city);
+        let _cityAlreadyAdded = cityAlreadyAdded(data.city, cities);
 
-        if (cityExists) {
-            setcities(cities.concat([city]));
+        if (cityExists && !_cityAlreadyAdded) {
+            setcities(cities.concat([data.city]));
             notyf.success('City Added');
+        } else if (_cityAlreadyAdded) {
+            notyf.error(data.city + ' has already been added');
         } else {
-            notyf.error(city + ' is not a valid city name');
+            notyf.error(data.city + ' is not a valid city name');
         }
     };
     return (
@@ -39,14 +42,17 @@ function HomePage() {
             <Container>
                 <Row>
                     <Col xs={12} xl={12}>
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit(submitHandler)}>
                             <div className="Input">
                                 <input
                                     type="text"
                                     id="input"
+                                    name="city"
                                     className="form__field"
                                     placeholder="Enter City and hit enter/done, e.g. Accra"
-                                    onChange={e => setcity(e.target.value)}
+                                    ref={register({
+                                        required: true
+                                    })}
                                 />
                             </div>
                         </form>
